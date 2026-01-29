@@ -43,7 +43,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return "CLIP API is running!"
+    return jsonify({"message": "CLIP API is running!"})
 
 @app.route("/encode-image", methods=["POST"])
 def encode_image_endpoint():
@@ -52,22 +52,23 @@ def encode_image_endpoint():
     try:
         image = Image.open(request.files["file"].stream).convert("RGB")
         embedding = encode_image(image)
-        return jsonify({"embedding": embedding.tolist()})
+        # numpy array をリストに変換
+        return jsonify({"embedding": embedding.cpu().numpy().tolist()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/encode-text", methods=["POST"])
 def encode_text_endpoint():
-    data = request.json
+    # Flask では request.json でも request.get_json() でもOK
+    data = request.get_json(force=True)  # force=True で Content-Type が不正でも強制的にパース
     if not data or "texts" not in data:
         return jsonify({"error": "No texts provided"}), 400
     try:
         embedding = encode_text(data["texts"])
-        return jsonify({"embedding": embedding.tolist()})
+        return jsonify({"embedding": embedding.cpu().numpy().tolist()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    # ローカルテスト用
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
