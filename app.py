@@ -11,14 +11,14 @@ torch.set_grad_enabled(False)
 print("=== PRELOADING CLIP MODEL ===")
 
 # 🔥 起動時ロード（ここが最重要）
-model, preprocess = clip.load("RN50", device=device, jit=False)
+model, preprocess = clip.load("RN50", device="cpu", jit=True)
+
 model.eval()
-model = model.float()
+model = model.half()   # ← メモリ半減
 for p in model.parameters():
     p.requires_grad = False
 
 print("=== CLIP LOADED SUCCESSFULLY ===")
-
 # ================= Flask =================
 app = Flask(__name__)
 
