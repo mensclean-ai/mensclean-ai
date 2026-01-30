@@ -6,13 +6,13 @@ import clip
 
 # ===== 設定 =====
 device = "cpu"
-torch.set_num_threads(1)  # CPU のみで軽量化
+torch.set_num_threads(1)  # CPU 使用量を制限
 
 _model = None
 _preprocess = None
 
 def load_model():
-    """CLIPモデルをロード（最初のリクエスト時のみ）"""
+    """CLIP モデルをロード（最初のリクエスト時のみ）"""
     global _model, _preprocess
     if _model is None:
         print("LOADING LIGHTWEIGHT CLIP RN50...")
@@ -50,6 +50,7 @@ def encode_image_endpoint():
     try:
         image = Image.open(request.files["file"].stream).convert("RGB")
         embedding = encode_image(image)
+        # JSON 互換のため float32 に戻す
         return jsonify({"embedding": embedding.cpu().numpy().astype(float).tolist()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -65,9 +66,9 @@ def encode_text_endpoint():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ===== 本番は gunicorn で起動 =====
+# ===== 本番用 gunicorn 推奨 =====
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print("Warming up CLIP model...")
-    load_model()
+    load_model()  # 起動時にモデルロード
     app.run(host="0.0.0.0", port=port)
