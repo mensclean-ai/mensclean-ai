@@ -3,52 +3,28 @@ from flask import Flask, request, jsonify
 from PIL import Image
 import torch
 import clip
-import json
 
 device = "cpu"
 torch.set_num_threads(1)
+torch.set_grad_enabled(False)
 
-_model = None
-_preprocess = None
+print("=== PRELOADING CLIP MODEL ===")
 
-def load_model():
-    global _model, _preprocess
-    if _model is None:
-        print("Loading LIGHT CLIP RN50...")
-        _model, _preprocess = clip.load("RN50", device=device, jit=False)
-        _model.eval()
-        _model = _model.float()
-        for p in _model.parameters():
-            p.requires_grad = False
+# 🔥 起動時ロード（ここが最重要）
+model, preprocess = clip.load("RN50", device=device, jit=False)
+model.eval()
+model = model.float()
+for p in model.parameters():
+    p.requires_grad = False
 
-        torch.set_grad_enabled(False)
-        torch.set_num_threads(1)
+print("=== CLIP LOADED SUCCESSFULLY ===")
 
-    return _model, _preprocess
-
-
-def encode_image(image: Image.Image):
-    model, preprocess = load_model()
-    image_input = preprocess(image).unsqueeze(0).to(device)
-    with torch.inference_mode():
-        embedding = model.encode_image(image_input)
-    return embedding.float()
-
-
-def encode_text(texts):
-    model, _ = load_model()
-    text_tokens = clip.tokenize(texts).to(device)
-    with torch.inference_mode():
-        embedding = model.encode_text(text_tokens)
-    return embedding.float()
-
-
+# ================= Flask =================
 app = Flask(__name__)
 
 @app.route("/")
 def index():
     return jsonify({"message": "CLIP API is running!"})
-
 
 @app.route("/encode-image", methods=["POST"])
 def encode_image_endpoint():
@@ -56,11 +32,14 @@ def encode_image_endpoint():
         return jsonify({"error": "No file uploaded"}), 400
     try:
         image = Image.open(request.files["file"].stream).convert("RGB")
-        embedding = encode_image(image)
+        image_input = preprocess(image).unsqueeze(0).to(device)
+
+        with torch.inference_mode():
+            embedding = model.encode_image(image_input)
+
         return jsonify({"embedding": embedding.cpu().numpy().tolist()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/encode-text", methods=["POST"])
 def encode_text_endpoint():
@@ -71,17 +50,18 @@ def encode_text_endpoint():
         if not texts or not texts[0]:
             return jsonify({"error": "text missing"}), 400
 
-        embedding = encode_text(texts)
+        text_tokens = clip.tokenize(texts).to(device)
 
-        return jsonify({
-            "embedding": embedding.cpu().numpy().astype(float).tolist()
-        })
+        with torch.inference_mode():
+            embedding = model.encode_text(text_tokens)
+
+        return jsonify({"embedding": embedding.cpu().numpy().tolist()})
 
     except Exception as e:
         print("ERROR:", e)
         return jsonify({"error": str(e)}), 500
 
-
+# ローカル用
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
