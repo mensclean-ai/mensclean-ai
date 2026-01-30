@@ -1,15 +1,9 @@
-flask
-gunicorn
-flask-cors
-numpy
-Pillow
+flask==3.0.0
+gunicorn==21.2.0
+torch==2.5.1+cpu
+torchvision==0.20.1+cpu
 ftfy
 regex
 tqdm
-
-torch==2.2.2+cpu
-torchvision==0.17.2+cpu
---extra-index-url https://download.pytorch.org/whl/cpu
-
+Pillow
 git+https://github.com/openai/CLIP.git
-
