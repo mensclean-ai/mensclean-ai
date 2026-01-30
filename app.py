@@ -71,7 +71,6 @@ def encode_text_endpoint():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    # 初回ロード
     print("Warming up CLIP model...")
-    load_model()
+    load_model()  # ここで事前ロード
     app.run(host="0.0.0.0", port=port)
