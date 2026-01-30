@@ -58,16 +58,26 @@ def encode_image_endpoint():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route("/encode-text", methods=["POST"])
 def encode_text_endpoint():
-    data = request.get_json(force=True)
-    if not data or "texts" not in data:
-        return jsonify({"error": "No texts provided"}), 400
     try:
-        embedding = encode_text(data["texts"])
-        return jsonify({"embedding": embedding.cpu().numpy().tolist()})
+        raw = request.data.decode("utf-8")
+        print("RAW BODY:", raw)
+
+        data = json.loads(raw) if raw else {}
+        texts = data.get("texts") or [data.get("text")]
+
+        if not texts or not texts[0]:
+            return jsonify({"error": "text missing"}), 400
+
+        embedding = encode_text(texts)
+
+        return jsonify({
+            "embedding": embedding.cpu().numpy().astype(float).tolist()
+        })
+
     except Exception as e:
+        print("ERROR:", e)
         return jsonify({"error": str(e)}), 500
 
 
