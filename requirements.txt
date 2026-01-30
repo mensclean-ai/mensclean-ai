@@ -2,6 +2,8 @@ flask==3.0.0
 gunicorn==21.2.0
 flask-cors==4.0.0
 
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 torch==2.5.1
 torchvision==0.20.1
 torchaudio==2.5.1
