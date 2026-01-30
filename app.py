@@ -13,16 +13,19 @@ _model = None
 _preprocess = None
 
 def load_model():
-    """最初のAPIリクエスト時だけモデルロード（Render安定化）"""
     global _model, _preprocess
     if _model is None:
-        print("Loading CLIP model on demand...")
-        _model, _preprocess = clip.load("ViT-B/32", device=device)  # ← RN50より軽量
+        print("Loading LIGHT CLIP model...")
+        _model, _preprocess = clip.load("RN50", device=device)
+
         _model.eval()
         for p in _model.parameters():
             p.requires_grad = False
-    return _model, _preprocess
 
+        # メモリ節約
+        torch.set_grad_enabled(False)
+
+    return _model, _preprocess
 
 def encode_image(image: Image.Image):
     model, preprocess = load_model()
