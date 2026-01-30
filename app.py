@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from PIL import Image
 import torch
 import clip
+import json
 
 # ===== 設定 =====
 device = "cpu"
@@ -39,6 +40,8 @@ def encode_text(texts):
         return embedding.float()
 
 
+
+
 # ===== Flask =====
 app = Flask(__name__)
 
@@ -61,10 +64,9 @@ def encode_image_endpoint():
 @app.route("/encode-text", methods=["POST"])
 def encode_text_endpoint():
     try:
-        raw = request.data.decode("utf-8")
-        print("RAW BODY:", raw)
+        data = request.get_json(force=True, silent=True) or {}
+        print("BODY:", data)
 
-        data = json.loads(raw) if raw else {}
         texts = data.get("texts") or [data.get("text")]
 
         if not texts or not texts[0]:
@@ -79,7 +81,6 @@ def encode_text_endpoint():
     except Exception as e:
         print("ERROR:", e)
         return jsonify({"error": str(e)}), 500
-
 
 # ===== ローカル実行用（本番では呼ばれない）=====
 if __name__ == "__main__":
