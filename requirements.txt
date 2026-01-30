@@ -7,9 +7,9 @@ ftfy
 regex
 tqdm
 
-# CPU専用Torch（超重要）
 torch==2.2.2+cpu
 torchvision==0.17.2+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 git+https://github.com/openai/CLIP.git
+
