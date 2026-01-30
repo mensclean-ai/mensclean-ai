@@ -6,13 +6,13 @@ import clip
 
 # ===== 設定 =====
 device = "cpu"
-torch.set_num_threads(1)
+torch.set_num_threads(1)  # CPU のみで軽量化
 
 _model = None
 _preprocess = None
 
 def load_model():
-    """CLIPモデルをロード"""
+    """CLIPモデルをロード（最初のリクエスト時のみ）"""
     global _model, _preprocess
     if _model is None:
         print("LOADING LIGHTWEIGHT CLIP RN50...")
@@ -26,13 +26,15 @@ def encode_image(image: Image.Image):
     model, preprocess = load_model()
     image_input = preprocess(image).unsqueeze(0).to(device)
     with torch.no_grad():
-        return model.encode_image(image_input)
+        embedding = model.encode_image(image_input)
+        return embedding.half()  # float16 に変換
 
 def encode_text(texts):
     model, _ = load_model()
     text_tokens = clip.tokenize(texts).to(device)
     with torch.no_grad():
-        return model.encode_text(text_tokens)
+        embedding = model.encode_text(text_tokens)
+        return embedding.half()  # float16 に変換
 
 # ===== Flask Web サービス =====
 app = Flask(__name__)
@@ -48,7 +50,7 @@ def encode_image_endpoint():
     try:
         image = Image.open(request.files["file"].stream).convert("RGB")
         embedding = encode_image(image)
-        return jsonify({"embedding": embedding.cpu().numpy().tolist()})
+        return jsonify({"embedding": embedding.cpu().numpy().astype(float).tolist()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -59,13 +61,13 @@ def encode_text_endpoint():
         return jsonify({"error": "No texts provided"}), 400
     try:
         embedding = encode_text(data["texts"])
-        return jsonify({"embedding": embedding.cpu().numpy().tolist()})
+        return jsonify({"embedding": embedding.cpu().numpy().astype(float).tolist()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ===== 開発用ではなく本番では gunicorn で起動する想定 =====
+# ===== 本番は gunicorn で起動 =====
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print("Warming up CLIP model...")
-    load_model()  # 起動時にロード
+    load_model()
     app.run(host="0.0.0.0", port=port)
