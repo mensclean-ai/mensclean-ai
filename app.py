@@ -18,11 +18,11 @@ print("=== PRELOADING CLIP MODEL ===")
 # Load CLIP model（起動時1回）
 # ====================
 model, _, preprocess = open_clip.create_model_and_transforms(
-    model_name="MobileCLIP-S2",  # ← ここ
-    pretrained="datacomp_xl_s13b_b90k",
+    model_name="ViT-SO400M-14-SigLIP-384",
+    pretrained="webli",
     device=device,
 )
-tokenizer = open_clip.get_tokenizer("MobileCLIP-S2")
+tokenizer = open_clip.get_tokenizer("ViT-SO400M-14-SigLIP-384")
 model.eval()
 print("=== CLIP LOADED SUCCESSFULLY ===")
 
