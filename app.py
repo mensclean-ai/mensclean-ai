@@ -13,7 +13,7 @@ torch.set_num_threads(1)
 torch.set_grad_enabled(False)
 
 print("=== PRELOADING CLIP MODEL ===")
- ====================
+#====================
 # Load CLIP model（起動時1回）
 # ====================
 model, _, preprocess = open_clip.create_model_and_transforms(
