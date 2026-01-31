@@ -3,6 +3,8 @@ from flask import Flask, request, jsonify
 from PIL import Image
 import torch
 import clip
+from PIL import Image
+import open_clip   # ← 追加
 import numpy as np
 #from scorer import calc_similarity, score_to_rank
 os.environ["OMP_NUM_THREADS"] = "1"
