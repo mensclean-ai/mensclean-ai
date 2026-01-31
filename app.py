@@ -4,7 +4,7 @@ from PIL import Image
 import torch
 import clip
 import numpy as np
-from scorer import calc_similarity, score_to_rank
+#from scorer import calc_similarity, score_to_rank
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
@@ -13,10 +13,16 @@ torch.set_num_threads(1)
 torch.set_grad_enabled(False)
 
 print("=== PRELOADING CLIP MODEL ===")
-model, preprocess = clip.load("RN50", device=device, jit=True)
-model.eval().half()
-for p in model.parameters():
-    p.requires_grad = False
+ ====================
+# Load CLIP model（起動時1回）
+# ====================
+model, _, preprocess = open_clip.create_model_and_transforms(
+    model_name="MobileCLIP-S2",  # ← ここ
+    pretrained="datacomp_xl_s13b_b90k",
+    device=device,
+)
+tokenizer = open_clip.get_tokenizer("MobileCLIP-S2")
+model.eval()
 print("=== CLIP LOADED SUCCESSFULLY ===")
 
 app = Flask(__name__)
