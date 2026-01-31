@@ -10,11 +10,11 @@ device = torch.device("cpu")
 # Load CLIP model（起動時1回）
 # ====================
 model, _, preprocess = open_clip.create_model_and_transforms(
-    model_name="ViT-B-32",
-    pretrained="openai",
+    model_name="MobileCLIP-S2",  # ← ここ
+    pretrained="datacomp_xl_s13b_b90k",
     device=device,
 )
-tokenizer = open_clip.get_tokenizer("ViT-B-32")
+tokenizer = open_clip.get_tokenizer("MobileCLIP-S2")
 
 model.eval()
 
